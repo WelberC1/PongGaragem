@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Guia do Pong-Garagem</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 16mm 15mm; }
+  :root {
+    --tinta: #1f2430; --suave: #5b6272; --linha: #dfe3ea; --fundo: #f6f7fa;
+    --azul: #2f6fdb; --azul-cl: #e8f0fd; --verde: #1f9d55; --verde-cl: #e6f6ec;
+    --laranja: #d9822b; --laranja-cl: #fdf1e4; --roxo: #7b4fd6; --roxo-cl: #f1ebfc;
+    --vermelho: #d64545; --vermelho-cl: #fdeaea;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: var(--tinta); font-size: 10.5pt;
+         line-height: 1.5; margin: 0; background: #fff; }
+  h1, h2, h3 { line-height: 1.2; margin: 0; }
+  h2 { font-size: 19pt; margin: 0 0 4px; }
+  h3 { font-size: 12.5pt; margin: 14px 0 6px; }
+  p { margin: 6px 0; }
+  code, .mono { font-family: Consolas, "Courier New", monospace; font-size: 9.5pt; }
+  code { background: var(--fundo); border: 1px solid var(--linha); border-radius: 4px; padding: 0 4px; }
+  pre { font-family: Consolas, monospace; font-size: 9.5pt; background: #1f2430; color: #e6e9ef;
+        border-radius: 8px; padding: 10px 12px; margin: 6px 0; white-space: pre-wrap; }
+  pre .c { color: #8fa1b3; }
+  .pagina { page-break-after: always; }
+  .pagina:last-child { page-break-after: auto; }
+  .evita { page-break-inside: avoid; }
+
+  /* capa */
+  .capa { height: 255mm; display: flex; flex-direction: column; justify-content: center;
+          background: linear-gradient(160deg, #1f2430 0%, #2b3a67 60%, #2f6fdb 100%);
+          color: #fff; border-radius: 14px; padding: 28mm 20mm; }
+  .capa .tag { font-size: 11pt; letter-spacing: 3px; text-transform: uppercase; opacity: .8; }
+  .capa h1 { font-size: 40pt; margin: 10px 0 6px; }
+  .capa .sub { font-size: 15pt; opacity: .95; }
+  .capa .pong { margin: 26px 0; font-family: Consolas, monospace; font-size: 13pt; line-height: 1.25;
+                background: rgba(0,0,0,.25); padding: 14px 18px; border-radius: 10px; width: fit-content; }
+  .quadra { position: relative; width: 300px; height: 170px; margin: 28px 0; border-radius: 10px;
+            background: rgba(0,0,0,.35); border: 2px solid rgba(255,255,255,.5); overflow: hidden; }
+  .quadra .meio { position: absolute; left: 149px; top: 0; bottom: 0; border-left: 2px dashed rgba(255,255,255,.45); }
+  .quadra .placar { position: absolute; top: 10px; width: 100%; text-align: center; font: 700 22pt Consolas, monospace; }
+  .quadra .raq { position: absolute; width: 8px; height: 46px; background: #fff; border-radius: 2px; }
+  .quadra .bola { position: absolute; left: 196px; top: 96px; width: 12px; height: 12px; background: #ffd34d; border-radius: 2px; }
+  .capa .rodape { margin-top: auto; font-size: 10.5pt; opacity: .85; }
+
+  /* cabeçalho de seção */
+  .secao { display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+           padding-bottom: 8px; border-bottom: 3px solid var(--azul); }
+  .secao .num { background: var(--azul); color: #fff; font-weight: 700; font-size: 16pt;
+                width: 40px; height: 40px; border-radius: 10px; display: flex;
+                align-items: center; justify-content: center; flex: none; }
+  .secao .resumo { color: var(--suave); font-size: 10pt; }
+
+  /* caixas */
+  .caixa { border-radius: 10px; padding: 10px 14px; margin: 10px 0; border-left: 5px solid; }
+  .caixa b.t { display: block; margin-bottom: 2px; }
+  .dica { background: var(--azul-cl); border-color: var(--azul); }
+  .ok { background: var(--verde-cl); border-color: var(--verde); }
+  .aviso { background: var(--laranja-cl); border-color: var(--laranja); }
+  .perigo { background: var(--vermelho-cl); border-color: var(--vermelho); }
+  .ideia { background: var(--roxo-cl); border-color: var(--roxo); }
+
+  /* cartões de programa */
+  .grade { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card { border: 1px solid var(--linha); border-radius: 10px; padding: 10px 12px; background: #fff;
+          page-break-inside: avoid; }
+  .card h4 { margin: 0 0 2px; font-size: 11.5pt; display: flex; align-items: center; gap: 6px; }
+  .card .ver { color: var(--suave); font-size: 8.5pt; }
+  .card dl { margin: 6px 0 0; display: grid; grid-template-columns: 62px 1fr; gap: 2px 8px; font-size: 9.5pt; }
+  .card dt { color: var(--suave); font-weight: 600; }
+  .card dd { margin: 0; }
+  .selo { display: inline-block; font-size: 8pt; font-weight: 700; padding: 1px 7px; border-radius: 20px;
+          vertical-align: middle; }
+  .s-uso { background: var(--verde-cl); color: var(--verde); }
+  .s-opc { background: var(--laranja-cl); color: var(--laranja); }
+  .s-uma { background: var(--roxo-cl); color: var(--roxo); }
+  .s-nosso { background: var(--azul-cl); color: var(--azul); }
+
+  /* fluxo */
+  .fluxo { display: flex; align-items: stretch; gap: 0; margin: 10px 0; }
+  .etapa { flex: 1; border: 2px solid var(--azul); border-radius: 10px; padding: 8px 6px; text-align: center;
+           background: var(--azul-cl); font-size: 9pt; }
+  .etapa b { display: block; font-size: 10pt; }
+  .etapa .ferr { display: block; margin-top: 4px; color: var(--azul); font-weight: 700; font-size: 8.5pt; }
+  .seta { display: flex; align-items: center; padding: 0 3px; color: var(--azul); font-size: 14pt; font-weight: 700; }
+
+  /* tabelas */
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 9.5pt; }
+  th { background: var(--fundo); text-align: left; font-weight: 700; }
+  th, td { border: 1px solid var(--linha); padding: 5px 8px; vertical-align: top; }
+
+  /* fases */
+  .fase { border: 1px solid var(--linha); border-radius: 12px; overflow: hidden; margin: 12px 0;
+          page-break-inside: avoid; }
+  .fase .topo { display: flex; align-items: center; gap: 10px; padding: 9px 14px; color: #fff; }
+  .fase .topo .n { font-size: 20pt; font-weight: 800; opacity: .9; }
+  .fase .topo h3 { margin: 0; font-size: 13.5pt; }
+  .fase .topo .quando { margin-left: auto; font-size: 9pt; background: rgba(255,255,255,.2);
+                        padding: 2px 10px; border-radius: 20px; white-space: nowrap; }
+  .fase .corpo { padding: 8px 14px 10px; }
+  .fase .corpo ol, .fase .corpo ul { margin: 4px 0; padding-left: 20px; }
+  .fase .corpo li { margin: 2px 0; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .rot { font-weight: 700; font-size: 9pt; text-transform: uppercase; letter-spacing: .5px; color: var(--suave);
+         margin-top: 6px; }
+  .pronto { background: var(--verde-cl); border-radius: 8px; padding: 6px 10px; margin-top: 8px; font-size: 9.5pt; }
+
+  /* checklist */
+  .check { list-style: none; padding: 0; margin: 6px 0; }
+  .check li { padding: 4px 0 4px 28px; position: relative; border-bottom: 1px dashed var(--linha); }
+  .check li::before { position: absolute; left: 2px; top: 3px; font-size: 12pt; }
+  .check li.f::before { content: "✅"; }
+  .check li.a::before { content: "⬜"; }
+
+  /* linha do tempo */
+  .tempo { position: relative; margin: 10px 0 0 8px; padding-left: 22px; border-left: 3px solid var(--linha); }
+  .tempo .ev { position: relative; margin: 0 0 9px; }
+  .tempo .ev::before { content: ""; position: absolute; left: -30px; top: 4px; width: 13px; height: 13px;
+                       border-radius: 50%; background: var(--azul); border: 3px solid #fff; box-shadow: 0 0 0 2px var(--azul); }
+  .tempo .ev.feito::before { background: var(--verde); box-shadow: 0 0 0 2px var(--verde); }
+  .tempo .ev.marco::before { background: var(--laranja); box-shadow: 0 0 0 2px var(--laranja); }
+  .tempo .data { font-weight: 700; display: inline-block; min-width: 92px; }
+
+  .glossario { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; }
+  .glossario div { page-break-inside: avoid; border-bottom: 1px dashed var(--linha); padding: 3px 0; }
+  .glossario b { color: var(--azul); }
+  .indice { list-style: none; padding: 0; font-size: 11.5pt; }
+  .indice li { padding: 7px 0; border-bottom: 1px dashed var(--linha); display: flex; gap: 12px; }
+  .indice .n { color: #fff; background: var(--azul); border-radius: 6px; width: 26px; text-align: center; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- ======================= CAPA ======================= -->
+<section class="pagina">
+  <div class="capa">
+    <div class="tag">Projeto Garagem · IFSP Guarulhos</div>
+    <h1>Pong-Garagem</h1>
+    <div class="sub">Guia do projeto: programas instalados, o que já funciona<br>e como cada próxima fase vai ser construída</div>
+    <div class="quadra">
+      <div class="meio"></div>
+      <div class="placar">3&nbsp;&nbsp;&nbsp;2</div>
+      <div class="raq" style="left:14px; top:40px"></div>
+      <div class="raq" style="right:14px; top:78px"></div>
+      <div class="bola"></div>
+    </div>
+    <div class="rodape">
+      Welber Caetano Santos · Mariana Bastos Esteves · Lilian Letícia Firino Zilmar<br>
+      Pós-graduação em Computação Aplicada · versão de 20/11/2026
+    </div>
+  </div>
+</section>
+
+<!-- ======================= COMO LER ======================= -->
+<section class="pagina">
+  <div class="secao"><div class="num">0</div><div><h2>Como ler este guia</h2>
+    <div class="resumo">Leia uma parte por vez. Cada parte faz sentido sozinha.</div></div></div>
+
+  <ul class="indice">
+    <li><span class="n">1</span><span><b>O projeto em 1 minuto</b>: o que estamos construindo, em linguagem simples</span></li>
+    <li><span class="n">2</span><span><b>Programas instalados</b>: cada ferramenta, para que serve e quando usar</span></li>
+    <li><span class="n">3</span><span><b>Como as ferramentas se encaixam</b>: o caminho do código até a placa</span></li>
+    <li><span class="n">4</span><span><b>O que já funciona</b>: tudo o que foi feito e testado</span></li>
+    <li><span class="n">5</span><span><b>Próximas fases</b>: SO, vídeo, som, botões, Pong, placa e Mostra</span></li>
+    <li><span class="n">6</span><span><b>Calendário</b>: o que fazer em cada dia até 14/12</span></li>
+    <li><span class="n">7</span><span><b>Quando algo dá errado</b>: problemas comuns e a solução</span></li>
+    <li><span class="n">8</span><span><b>Glossário</b>: todas as siglas explicadas</span></li>
+  </ul>
+
+  <div class="caixa dica"><b class="t">💡 As caixas coloridas</b>
+    <span style="color:var(--azul)">Azul</span> = dica ·
+    <span style="color:var(--verde)">Verde</span> = já funciona ·
+    <span style="color:var(--laranja)">Laranja</span> = atenção ·
+    <span style="color:var(--vermelho)">Vermelho</span> = pode estragar algo ·
+    <span style="color:var(--roxo)">Roxo</span> = ideia ou analogia
+  </div>
+  <div class="caixa ideia"><b class="t">🧠 Palavra estranha?</b>
+    Toda sigla está no <b>Glossário</b> (parte 8), no final. Pode pular para lá a qualquer momento.
+  </div>
+</section>
+
+<!-- ======================= 1. PROJETO EM 1 MINUTO ======================= -->
+<section class="pagina">
+  <div class="secao"><div class="num">1</div><div><h2>O projeto em 1 minuto</h2>
+    <div class="resumo">Um computador inteiro, feito por nós, dentro de um chip.</div></div></div>
+
+  <h3>🎯 A ideia</h3>
+  <p>Construir um <b>computador de 8 bits do zero</b> e fazer ele rodar um <b>Pong</b> para dois jogadores,
+    com imagem na TV (HDMI), som e botões de fliperama.</p>
+
+  <h3>🧩 As peças, da mais baixa para a mais alta</h3>
+  <table>
+    <tr><th style="width:24%">Peça</th><th>O que é</th><th style="width:24%">Analogia</th></tr>
+    <tr><td>🟦 <b>Placa Tang Nano 20K</b></td><td>Placa com um chip <b>FPGA</b>: um chip "em branco" que vira qualquer circuito que a gente descrever.</td><td>Massinha de modelar eletrônica</td></tr>
+    <tr><td>🟩 <b>ISA da GAR-8</b></td><td>A lista dos 45 comandos que a nossa CPU entende (<code>LDA</code>, <code>ADD</code>, <code>JMP</code>…).</td><td>O idioma</td></tr>
+    <tr><td>🟨 <b>CPU GAR-8</b></td><td>O processador, escrito em Verilog. Lê os comandos da memória e executa um por um.</td><td>A pessoa que fala o idioma</td></tr>
+    <tr><td>🟧 <b>Montador</b></td><td>Programa em Python que traduz <code>LDA #$3F</code> para os números <code>10 3F</code>.</td><td>O tradutor</td></tr>
+    <tr><td>🟥 <b>Bootloader</b></td><td>O primeiro programa que roda quando a placa liga. Prepara tudo e chama o SO.</td><td>O despertador</td></tr>
+    <tr><td>🟪 <b>Sistema operacional</b></td><td>Fica rodando o tempo todo: conversa com o PC e oferece funções prontas para o jogo.</td><td>O gerente</td></tr>
+    <tr><td>🎮 <b>Pong</b></td><td>O jogo, escrito em Assembly, usando as funções do SO.</td><td>O espetáculo</td></tr>
+  </table>
+
+  <h3>⚡ O que acontece quando a placa liga</h3>
+  <ol>
+    <li>A CPU começa a ler a memória no endereço <code>0000</code>, onde está o <b>bootloader</b>.</li>
+    <li>O bootloader pisca os LEDs 3 vezes: <i>"estou viva!"</i></li>
+    <li>Ele copia o SO da memória fixa (<b>ROM</b>) para a memória de trabalho (<b>RAM</b>).</li>
+    <li>Ele manda <code>GAR-8 boot</code> para o PC pelo cabo USB.</li>
+    <li>Ele espera <b>2 segundos</b>: se o PC mandar a letra <code>S</code>, recebe um programa novo. Senão, segue.</li>
+    <li>Ele pula para o SO, no endereço <code>8000h</code>.</li>
+  </ol>
+  <div class="caixa ok"><b class="t">✅ Isso já funciona na placa</b>Os passos 1 a 6 rodaram na Tang Nano 20K em 20/11/2026.</div>
+</section>
+
+<!-- ======================= 2. PROGRAMAS INSTALADOS ======================= -->
+<section class="pagina">
+  <div class="secao"><div class="num">2</div><div><h2>Programas instalados</h2>
+    <div class="resumo">O que tem no computador, para que serve e quando você vai usar.</div></div></div>
+
+  <p>
+    <span class="selo s-uso">USO DIÁRIO</span> usado o tempo todo ·
+    <span class="selo s-uma">USADO 1 VEZ</span> já cumpriu a função ·
+    <span class="selo s-opc">OPCIONAL</span> instalado, mas não obrigatório ·
+    <span class="selo s-nosso">FEITO POR NÓS</span> está no repositório
+  </p>
+
+  <h3>📦 OSS CAD Suite: o kit principal (em <code>C:\oss-cad-suite</code>)</h3>
+  <p>Um pacote só, gratuito e de código aberto, que traz quase todas as ferramentas de FPGA. Versão de 20/11/2026.</p>
+
+  <div class="grade">
+    <div class="card"><h4>🔬 Icarus Verilog <span class="selo s-uso">USO DIÁRIO</span></h4>
+      <div class="ver">iverilog + vvp · versão 14</div>
+      <dl><dt>O que é</dt><dd><b>Simulador</b>: roda o circuito Verilog dentro do PC, sem placa.</dd>
+          <dt>Para quê</dt><dd>Testar a CPU e o bootloader antes de gravar. Achar erro aqui é muito mais fácil.</dd>
+          <dt>Quando</dt><dd>Sempre que mudar um <code>.v</code> ou <code>.asm</code>.</dd>
+          <dt>Comando</dt><dd><code>python build.py sim</code></dd></dl></div>
+
+    <div class="card"><h4>📈 GTKWave <span class="selo s-opc">QUANDO PRECISAR</span></h4>
+      <div class="ver">gtkwave</div>
+      <dl><dt>O que é</dt><dd>Visualizador de <b>ondas</b>: mostra cada fio do circuito ao longo do tempo, como um osciloscópio.</dd>
+          <dt>Para quê</dt><dd>Investigar quando um teste falha: ver <i>quando</i> e <i>qual</i> sinal ficou errado.</dd>
+          <dt>Quando</dt><dd>Depuração de vídeo e som (fases 4 e 5).</dd>
+          <dt>Comando</dt><dd><code>gtkwave arquivo.vcd</code></dd></dl></div>
+
+    <div class="card"><h4>⚙️ Yosys <span class="selo s-uso">USO DIÁRIO</span></h4>
+      <div class="ver">versão 0.71</div>
+      <dl><dt>O que é</dt><dd><b>Sintetizador</b>: transforma o Verilog em peças do chip (LUTs, flip-flops, blocos de memória).</dd>
+          <dt>Para quê</dt><dd>É o primeiro passo para o circuito virar hardware de verdade.</dd>
+          <dt>Comando</dt><dd>roda sozinho dentro de <code>python build.py placa</code></dd></dl></div>
+
+    <div class="card"><h4>🗺️ nextpnr-himbaechel <span class="selo s-uso">USO DIÁRIO</span></h4>
+      <div class="ver">versão 0.11</div>
+      <dl><dt>O que é</dt><dd><b>Place &amp; route</b>: escolhe <i>onde</i> cada peça fica no chip e liga os fios entre elas.</dd>
+          <dt>Para quê</dt><dd>Também confere se o circuito é rápido o bastante (hoje: 100 MHz possíveis, precisamos de 27).</dd>
+          <dt>Comando</dt><dd>dentro de <code>python build.py placa</code></dd></dl></div>
+
+    <div class="card"><h4>📦 gowin_pack <span class="selo s-uso">USO DIÁRIO</span></h4>
+      <div class="ver">parte do Apicula</div>
+      <dl><dt>O que é</dt><dd>Empacota o resultado no arquivo <b><code>.fs</code></b> (bitstream), que é o que vai para o chip.</dd>
+          <dt>Comando</dt><dd>dentro de <code>python build.py placa</code></dd></dl></div>
+
+    <div class="card"><h4>🔌 openFPGALoader <span class="selo s-uso">USO DIÁRIO</span></h4>
+      <div class="ver">versão 1.2</div>
+      <dl><dt>O que é</dt><dd><b>Gravador</b>: manda o <code>.fs</code> pelo USB para a placa.</dd>
+          <dt>Para quê</dt><dd>SRAM = some ao desligar (rápido, para testes). Flash = fica gravado (para a Mostra).</dd>
+          <dt>Comando</dt><dd><code>python build.py gravar</code> (ou <code>--flash</code>)</dd></dl></div>
+  </div>
+</section>
+
+<section class="pagina">
+  <h3>🐍 Python e bibliotecas</h3>
+  <div class="grade">
+    <div class="card"><h4>🐍 Python <span class="selo s-uso">USO DIÁRIO</span></h4>
+      <div class="ver">versão 3.14 (já estava instalado)</div>
+      <dl><dt>Para quê</dt><dd>Roda o montador, o carregador e o <code>build.py</code>.</dd></dl></div>
+    <div class="card"><h4>📡 pyserial <span class="selo s-uso">USO DIÁRIO</span></h4>
+      <div class="ver">versão 3.5</div>
+      <dl><dt>O que é</dt><dd>Biblioteca para o Python conversar pela porta serial (COM4).</dd>
+          <dt>Para quê</dt><dd>O <code>carregar.py</code> usa para mandar programas para a placa.</dd></dl></div>
+    <div class="card"><h4>🧪 cocotb <span class="selo s-opc">OPCIONAL</span></h4>
+      <div class="ver">versão 2.1</div>
+      <dl><dt>O que é</dt><dd>Escreve testes de circuito em Python em vez de Verilog.</dd>
+          <dt>Situação</dt><dd>Instalado, mas não usamos: nossos testes são em Verilog puro, como diz a proposta. Pode ignorar.</dd></dl></div>
+    <div class="card"><h4>🛠️ make <span class="selo s-opc">OPCIONAL</span></h4>
+      <div class="ver">versão 4.4 (ezwinports)</div>
+      <dl><dt>O que é</dt><dd>Executor de receitas de compilação (Makefile).</dd>
+          <dt>Situação</dt><dd>O <code>build.py</code> faz esse papel. Pode ignorar.</dd></dl></div>
+  </div>
+
+  <h3>🧰 Outras ferramentas</h3>
+  <div class="grade">
+    <div class="card"><h4>🟩 KiCad <span class="selo s-uso">FASE 8</span></h4>
+      <div class="ver">versão 10.0</div>
+      <dl><dt>O que é</dt><dd>Programa para desenhar <b>placas de circuito impresso</b>.</dd>
+          <dt>Para quê</dt><dd>Desenhar a placa de expansão com os 4 botões de fliperama.</dd></dl></div>
+    <div class="card"><h4>💬 PuTTY <span class="selo s-uso">USO DIÁRIO</span></h4>
+      <div class="ver">versão 0.85</div>
+      <dl><dt>O que é</dt><dd><b>Terminal serial</b>: uma janela onde você digita para a placa e vê a resposta.</dd>
+          <dt>Como</dt><dd>Connection type: <b>Serial</b> · Serial line: <b>COM4</b> · Speed: <b>9600</b>.</dd>
+          <dt>Quando</dt><dd>Para usar o monitor do SO (fase 3).</dd></dl></div>
+    <div class="card"><h4>🔧 Zadig <span class="selo s-uma">USADO 1 VEZ</span></h4>
+      <div class="ver">versão 2.9 · em Downloads\zadig</div>
+      <dl><dt>O que é</dt><dd>Troca o <b>driver</b> de um dispositivo USB.</dd>
+          <dt>O que fez</dt><dd>Pôs o driver WinUSB na <b>interface 0</b> da placa (a de gravação) para o openFPGALoader funcionar.</dd>
+          <dt>De novo?</dt><dd>Só se trocar de computador.</dd></dl></div>
+    <div class="card"><h4>🏭 Gowin EDA <span class="selo s-opc">NÃO INSTALADO</span></h4>
+      <div class="ver">programa oficial do fabricante do chip</div>
+      <dl><dt>Para quê</dt><dd>Tem o analisador lógico embutido (GAO), citado na proposta.</dd>
+          <dt>Situação</dt><dd>Precisa de cadastro no site da Gowin. Só instale se precisar do GAO.</dd></dl></div>
+  </div>
+
+  <h3>⭐ Programas feitos por nós (no repositório)</h3>
+  <div class="grade">
+    <div class="card"><h4>🏗️ build.py <span class="selo s-nosso">FEITO POR NÓS</span></h4>
+      <dl><dt>O que é</dt><dd>O "botão de tudo": monta, simula, sintetiza e grava.</dd></dl></div>
+    <div class="card"><h4>🔤 sw/gasm.py <span class="selo s-nosso">FEITO POR NÓS</span></h4>
+      <dl><dt>O que é</dt><dd>O <b>montador</b>: Assembly da GAR-8 → bytes.</dd></dl></div>
+    <div class="card"><h4>📤 sw/carregar.py <span class="selo s-nosso">FEITO POR NÓS</span></h4>
+      <dl><dt>O que é</dt><dd>Manda um programa para a placa pela serial, usando o bootloader.</dd></dl></div>
+    <div class="card"><h4>🧱 rtl/ e sw/*.asm <span class="selo s-nosso">FEITO POR NÓS</span></h4>
+      <dl><dt>O que é</dt><dd>A CPU, o SoC, o bootloader e o SO provisório.</dd></dl></div>
+  </div>
+</section>
+
+<!-- ======================= 3. COMO SE ENCAIXAM ======================= -->
+<section class="pagina">
+  <div class="secao"><div class="num">3</div><div><h2>Como as ferramentas se encaixam</h2>
+    <div class="resumo">Dois caminhos: um para o hardware (Verilog), outro para o software (Assembly).</div></div></div>
+
+  <h3>🔩 Caminho do hardware: do Verilog até a placa</h3>
+  <div class="fluxo">
+    <div class="etapa"><b>1. Escrever</b>arquivos <code>.v</code><span class="ferr">editor</span></div>
+    <div class="seta">→</div>
+    <div class="etapa"><b>2. Testar</b>simula no PC<span class="ferr">Icarus</span></div>
+    <div class="seta">→</div>
+    <div class="etapa"><b>3. Sintetizar</b>vira peças do chip<span class="ferr">Yosys</span></div>
+    <div class="seta">→</div>
+    <div class="etapa"><b>4. Posicionar</b>coloca e liga<span class="ferr">nextpnr</span></div>
+    <div class="seta">→</div>
+    <div class="etapa"><b>5. Empacotar</b>gera o <code>.fs</code><span class="ferr">gowin_pack</span></div>
+    <div class="seta">→</div>
+    <div class="etapa"><b>6. Gravar</b>vai para a placa<span class="ferr">openFPGALoader</span></div>
+  </div>
+  <p>Os passos 3 a 5 rodam juntos em <code>python build.py placa</code>. O passo 6 é <code>python build.py gravar</code>.</p>
+
+  <h3>📝 Caminho do software: do Assembly até a CPU</h3>
+  <div class="fluxo">
+    <div class="etapa"><b>1. Escrever</b>arquivo <code>.asm</code><span class="ferr">editor</span></div>
+    <div class="seta">→</div>
+    <div class="etapa"><b>2. Montar</b>vira bytes <code>.bin</code><span class="ferr">gasm.py</span></div>
+    <div class="seta">→</div>
+    <div class="etapa" style="flex:1.6"><b>3a. Dentro da ROM</b>vai junto com o <code>.fs</code><span class="ferr">build.py placa</span></div>
+    <div class="seta">ou</div>
+    <div class="etapa" style="flex:1.6"><b>3b. Pela serial</b>sem regravar a FPGA, em segundos<span class="ferr">carregar.py</span></div>
+  </div>
+
+  <div class="caixa ideia"><b class="t">🧠 Por que dois caminhos para o software?</b>
+    Gravar a FPGA inteira leva cerca de 1 minuto. Mandar só o programa pela serial leva <b>poucos segundos</b>.
+    Por isso, ao fazer o Pong, vamos usar o caminho <b>3b</b>: muda o código, manda e já vê o resultado.
+  </div>
+
+  <h3>🗂️ Onde fica cada coisa</h3>
+  <table>
+    <tr><th style="width:30%">Pasta / arquivo</th><th>Conteúdo</th></tr>
+    <tr><td><code>docs/isa.md</code></td><td>A lista de comandos da CPU, o mapa de memória e as portas</td></tr>
+    <tr><td><code>rtl/gar8_cpu.v</code></td><td>A CPU</td></tr>
+    <tr><td><code>rtl/gar8_soc.v</code></td><td>CPU + ROM + RAM + serial + LEDs + relógio</td></tr>
+    <tr><td><code>rtl/top_tangnano20k.v</code></td><td>Liga o SoC aos pinos reais da placa</td></tr>
+    <tr><td><code>placa/tangnano20k.cst</code></td><td>Diz qual sinal vai em qual pino do chip</td></tr>
+    <tr><td><code>sw/boot.asm</code></td><td>O bootloader</td></tr>
+    <tr><td><code>sw/os.asm</code></td><td>O SO (hoje provisório: só faz eco)</td></tr>
+    <tr><td><code>tb/</code></td><td>Os testes da simulação</td></tr>
+    <tr><td><code>build/</code></td><td>Arquivos gerados (pode apagar; o build.py recria)</td></tr>
+  </table>
+</section>
+
+<!-- ======================= 4. O QUE JÁ FUNCIONA ======================= -->
+<section class="pagina">
+  <div class="secao"><div class="num">4</div><div><h2>O que já funciona</h2>
+    <div class="resumo">Tudo testado em simulação e na placa em 20/11/2026.</div></div></div>
+
+  <ul class="check">
+    <li class="f"><b>Placa reconhecida e gravando</b>: driver trocado, LED RGB piscou 20 vezes</li>
+    <li class="f"><b>ISA definida</b>: 45 comandos, registradores A, X, SP, PC, flags Z e C (<code>docs/isa.md</code>)</li>
+    <li class="f"><b>CPU GAR-8</b>: passa no teste que usa todas as instruções</li>
+    <li class="f"><b>Memória</b>: ROM 2 KB + RAM 16 KB em blocos de memória do chip</li>
+    <li class="f"><b>Serial 9600 bps</b>: a placa conversa com o PC</li>
+    <li class="f"><b>Montador</b>: <code>gasm.py</code> com rótulos, constantes, textos e expressões</li>
+    <li class="f"><b>Bootloader</b>: 237 de 256 bytes; pisca, copia, espera 2 s, recebe programa com soma de verificação</li>
+    <li class="f"><b>Carregador</b>: <code>carregar.py</code> mandou um programa e a placa respondeu <code>NOVO</code></li>
+  </ul>
+
+  <h3>🧪 Como sabemos que funciona</h3>
+  <table>
+    <tr><th>Teste</th><th>O que confere</th><th>Resultado</th></tr>
+    <tr><td>Teste da CPU</td><td>Cada instrução, cada flag, a pilha e os saltos</td><td>✅ passou (e acusou um defeito que plantamos de propósito)</td></tr>
+    <tr><td>Bootloader 1</td><td>Liga sem <code>S</code> → roda o SO da ROM</td><td>✅ simulação e placa</td></tr>
+    <tr><td>Bootloader 2</td><td>Carga certa → responde <code>K</code> e roda o programa novo</td><td>✅ simulação e placa</td></tr>
+    <tr><td>Bootloader 3</td><td>Soma errada → responde <code>E</code> e reinicia</td><td>✅ simulação</td></tr>
+    <tr><td>Bootloader 4</td><td>Programa grande demais → <code>E</code></td><td>✅ simulação</td></tr>
+  </table>
+
+  <div class="caixa aviso"><b class="t">⚠️ Ainda não testado na placa</b>
+    O botão <b>S1 como reset</b>, os casos 3 e 4 na placa e a gravação na <b>flash</b>.
+    São rápidos de testar e entram na fase 3.
+  </div>
+
+  <div class="caixa aviso"><b class="t">👥 Decisão do grupo</b>
+    A ISA foi uma <b>proposta</b>. Mariana e Lilian precisam ler o <code>docs/isa.md</code> e concordar
+    <b>antes</b> da fase 3, porque mudar a ISA depois obriga a mudar a CPU, o montador e todo o Assembly.
+  </div>
+</section>
+
+<!-- ======================= 5. PRÓXIMAS FASES ======================= -->
+<section class="pagina">
+  <div class="secao"><div class="num">5</div><div><h2>Próximas fases</h2>
+    <div class="resumo">Cada fase tem: objetivo, o que construir, passo a passo, como testar e quando está pronta.</div></div></div>
+
+  <div class="caixa dica"><b class="t">🗺️ Visão geral</b>
+    <b>3</b> SO → <b>4</b> Vídeo HDMI → <b>5</b> Som → <b>6</b> Botões → <b>7</b> Pong → <b>8</b> Placa de expansão (em paralelo) → <b>9</b> Mostra e artigo
+  </div>
+
+  <!-- FASE 3 -->
+  <div class="fase">
+    <div class="topo" style="background:var(--roxo)"><span class="n">3</span><h3>Sistema operacional</h3><span class="quando">21/11 → 24/11</span></div>
+    <div class="corpo">
+      <p><b>Objetivo:</b> trocar o SO provisório (só eco) por um SO de verdade: um <b>monitor</b> que você usa pelo PuTTY e <b>funções prontas</b> que o Pong vai chamar.</p>
+      <div class="cols">
+        <div>
+          <div class="rot">🖥️ Comandos do monitor</div>
+          <table>
+            <tr><th>Digite</th><th>Faz</th></tr>
+            <tr><td><code>M 8800</code></td><td>Mostra 16 bytes da memória a partir de 8800h</td></tr>
+            <tr><td><code>W 8800 3F</code></td><td>Grava 3F no endereço 8800h</td></tr>
+            <tr><td><code>L</code></td><td>Recebe um programa pela serial em 8800h</td></tr>
+            <tr><td><code>G 8800</code></td><td>Executa o programa em 8800h</td></tr>
+            <tr><td><code>?</code></td><td>Mostra a ajuda</td></tr>
+          </table>
+        </div>
+        <div>
+          <div class="rot">📞 Chamadas de sistema</div>
+          <table>
+            <tr><th>Endereço</th><th>Função</th></tr>
+            <tr><td><code>8003h</code></td><td>ler caractere da serial</td></tr>
+            <tr><td><code>8006h</code></td><td>escrever caractere</td></tr>
+            <tr><td><code>8009h</code></td><td>escrever texto</td></tr>
+            <tr><td><code>800Ch</code></td><td>ler botões</td></tr>
+            <tr><td><code>800Fh</code></td><td>tocar som</td></tr>
+            <tr><td><code>8012h</code></td><td>esperar o próximo quadro da tela</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="caixa ideia" style="margin:6px 0"><b class="t">🧠 Por que endereços fixos?</b>
+        É uma <b>tabela de saltos</b>: em cada endereço tem só um <code>JMP</code> para a função de verdade.
+        Se o SO mudar por dentro, o Pong continua chamando o mesmo endereço e nada quebra. É como um ramal
+        de telefone: a pessoa muda de mesa, mas o número continua o mesmo.</div>
+      <div class="rot">🔨 Passo a passo</div>
+      <ol>
+        <li>Escrever a tabela de saltos no início de <code>sw/os.asm</code>.</li>
+        <li>Escrever as funções de serial (já existem no bootloader, é só reaproveitar).</li>
+        <li>Escrever a leitura de linha e a conversão hexadecimal (texto <code>"3F"</code> → número 63).</li>
+        <li>Escrever cada comando do monitor, um de cada vez, testando no simulador.</li>
+        <li>Criar <code>tb/tb_os.v</code>: "digita" comandos e confere as respostas.</li>
+        <li>Testar na placa pelo PuTTY.</li>
+      </ol>
+      <div class="pronto">✅ <b>Pronto quando:</b> pelo PuTTY dá para ver a memória, gravar um byte, carregar um programa com <code>L</code> e rodá-lo com <code>G</code>.</div>
+    </div>
+  </div>
+</section>
+
+<section class="pagina">
+  <!-- FASE 4 -->
+  <div class="fase">
+    <div class="topo" style="background:var(--azul)"><span class="n">4</span><h3>Vídeo HDMI</h3><span class="quando">25/11 → 30/11</span></div>
+    <div class="corpo">
+      <p><b>Objetivo:</b> mostrar a quadra, a bola, as raquetes e o placar numa TV ou monitor HDMI, em <b>640 × 480 a 60 quadros por segundo</b>.</p>
+      <div class="caixa ideia" style="margin:6px 0"><b class="t">🧠 A grande sacada: a CPU não desenha</b>
+        A CPU roda a 3 MHz e não daria conta de pintar 307 mil pixels 60 vezes por segundo.
+        Então ela só <b>escreve as posições</b> (bola em X, Y; raquete em Y) nas portas, e um <b>circuito desenhista</b>
+        decide a cor de cada pixel na hora em que ele vai para a tela. Funciona como um teatro de sombras:
+        a CPU só move os bonecos e a luz faz o resto.</div>
+      <div class="rot">🧱 Blocos de hardware</div>
+      <table>
+        <tr><th style="width:28%">Bloco</th><th>O que faz</th></tr>
+        <tr><td><b>PLL</b></td><td>Gera os relógios do HDMI a partir dos 27 MHz: 25,2 MHz (pixel) e 126 MHz (bits)</td></tr>
+        <tr><td><b>Varredura</b></td><td>Dois contadores: coluna (0 a 799) e linha (0 a 524). Dizem qual pixel está saindo agora</td></tr>
+        <tr><td><b>Desenhista</b></td><td>"Este pixel está dentro da bola? Da raquete? Do placar?" → escolhe a cor</td></tr>
+        <tr><td><b>Codificador TMDS</b></td><td>Converte cada cor de 8 bits em 10 bits, no formato exigido pelo HDMI</td></tr>
+        <tr><td><b>Serializador</b></td><td>Manda os 10 bits um atrás do outro pelos fios do HDMI (peça pronta do chip Gowin)</td></tr>
+      </table>
+      <div class="rot">🔌 Portas novas (E/S 1)</div>
+      <table>
+        <tr><th>Porta</th><th>Uso</th><th>Porta</th><th>Uso</th></tr>
+        <tr><td><code>80h</code></td><td>bola X</td><td><code>84h</code></td><td>placar jogador 1</td></tr>
+        <tr><td><code>81h</code></td><td>bola Y</td><td><code>85h</code></td><td>placar jogador 2</td></tr>
+        <tr><td><code>82h</code></td><td>raquete 1 Y</td><td><code>86h</code></td><td>cores</td></tr>
+        <tr><td><code>83h</code></td><td>raquete 2 Y</td><td><code>87h</code></td><td>novo quadro? (para sincronizar o jogo)</td></tr>
+      </table>
+      <div class="caixa dica" style="margin:6px 0"><b class="t">💡 Truque das coordenadas</b>
+        640 não cabe em 8 bits (máximo 255). Então o jogo usa uma grade de <b>160 × 120</b> e cada "casinha" vira
+        4 × 4 pixels na tela. Assim as posições cabem em 1 byte e as contas da CPU ficam simples.</div>
+      <div class="rot">🔨 Passo a passo</div>
+      <ol>
+        <li>Pegar os pinos do HDMI no exemplo oficial da Sipeed (sem chutar, como aprendemos com a serial).</li>
+        <li>Primeiro teste: <b>barras coloridas</b> na tela, sem CPU (é o teste citado na proposta).</li>
+        <li>Desenhar um quadrado fixo, depois um quadrado controlado pelas portas.</li>
+        <li>Bola, duas raquetes, linha do meio e placar (números desenhados com uma fonte pequena em ROM).</li>
+        <li>Simular a varredura no Icarus e conferir no GTKWave.</li>
+      </ol>
+      <div class="pronto">✅ <b>Pronto quando:</b> um programa de teste move a bola na tela escrevendo nas portas 80h e 81h.</div>
+    </div>
+  </div>
+</section>
+
+<section class="pagina">
+  <!-- FASE 5 -->
+  <div class="fase">
+    <div class="topo" style="background:var(--laranja)"><span class="n">5</span><h3>Som</h3><span class="quando">01/12 → 02/12</span></div>
+    <div class="corpo">
+      <p><b>Objetivo:</b> "bip" na rebatida e "bip-bip" no ponto, no alto-falante.</p>
+      <div class="caixa aviso" style="margin:6px 0"><b class="t">⚠️ Correção em relação à proposta</b>
+        A Tang Nano 20K já tem um <b>amplificador de áudio</b> (MAX98357A) com conector para o alto-falante.
+        Mas ele não recebe a onda direto num pino: recebe pelo protocolo <b>I2S</b> (áudio digital).
+        Então a onda quadrada é gerada como "amostras" e enviada por I2S. Bom lado: <b>a placa de expansão não precisa de conector de alto-falante</b>.
+        (Confirmar no esquemático da placa.)</div>
+      <div class="rot">🧱 Blocos de hardware</div>
+      <ul>
+        <li><b>Gerador de tom</b>: um contador que inverte a saída a cada N ciclos → onda quadrada. N vem da porta <code>8Ah</code>.</li>
+        <li><b>Duração</b>: outro contador desliga o som sozinho depois de X milissegundos, para a CPU não ter de lembrar.</li>
+        <li><b>Transmissor I2S</b>: 3 fios (BCLK, LRCLK, DIN) que levam as amostras ao amplificador.</li>
+      </ul>
+      <div class="pronto">✅ <b>Pronto quando:</b> <code>LDA #nota</code> + <code>OUT $8A</code> toca um bip e ele para sozinho.</div>
+    </div>
+  </div>
+
+  <!-- FASE 6 -->
+  <div class="fase">
+    <div class="topo" style="background:var(--verde)"><span class="n">6</span><h3>Botões de fliperama</h3><span class="quando">02/12 → 03/12</span></div>
+    <div class="corpo">
+      <p><b>Objetivo:</b> 4 botões (sobe/desce para cada jogador) lidos pela CPU na porta <code>00h</code>.</p>
+      <ul>
+        <li>Cada botão vai num pino livre da placa, com <b>resistor de pull-up</b> (solto = 1, apertado = 0).</li>
+        <li><b>Debounce</b> em hardware: um botão "treme" por alguns milissegundos ao ser apertado, e o circuito espera estabilizar antes de dar o valor.</li>
+        <li>Enquanto a placa de expansão não chega: <b>protoboard e fios</b> (plano B da proposta).</li>
+      </ul>
+      <div class="pronto">✅ <b>Pronto quando:</b> o comando <code>M</code> do monitor mostra os bits da porta 00h mudando ao apertar cada botão.</div>
+    </div>
+  </div>
+
+  <!-- FASE 7 -->
+  <div class="fase">
+    <div class="topo" style="background:#c0397a"><span class="n">7</span><h3>O jogo Pong</h3><span class="quando">04/12 → 09/12</span></div>
+    <div class="corpo">
+      <p><b>Objetivo:</b> o Pong completo em Assembly da GAR-8: placar, sons, bola que acelera e modo demonstração.</p>
+      <div class="rot">🔁 O laço do jogo (roda 60 vezes por segundo)</div>
+      <ol>
+        <li><b>Espera</b> o próximo quadro (chamada <code>8012h</code>), para o jogo ter sempre a mesma velocidade.</li>
+        <li><b>Lê</b> os botões e move as raquetes (sem sair da tela).</li>
+        <li><b>Move</b> a bola: X = X + velocidade X; Y = Y + velocidade Y.</li>
+        <li><b>Bateu</b> em cima ou embaixo? Inverte a velocidade Y.</li>
+        <li><b>Bateu</b> na raquete? Inverte a velocidade X, <b>acelera</b> e toca o bip.</li>
+        <li><b>Passou</b> da raquete? Ponto para o outro, bip-bip, bola volta ao centro.</li>
+        <li><b>Escreve</b> as posições e o placar nas portas 80h a 85h.</li>
+      </ol>
+      <div class="caixa ideia" style="margin:6px 0"><b class="t">🤖 Modo demonstração</b>
+        Se ninguém apertar nada por 10 s (600 quadros), as raquetes passam a ser controladas pelo próprio jogo:
+        cada uma simplesmente "segue" a bola. Qualquer botão devolve o controle aos jogadores.</div>
+      <div class="pronto">✅ <b>Pronto quando:</b> duas pessoas jogam uma partida inteira e o modo demo entra sozinho.</div>
+    </div>
+  </div>
+</section>
+
+<section class="pagina">
+  <!-- FASE 8 -->
+  <div class="fase">
+    <div class="topo" style="background:#4a5568"><span class="n">8</span><h3>Placa de expansão (KiCad)</h3><span class="quando">em paralelo</span></div>
+    <div class="corpo">
+      <ol>
+        <li>No KiCad: desenhar o esquema (4 botões + resistores + barra de pinos que encaixa na Tang Nano).</li>
+        <li>Desenhar a placa de 2 camadas e gerar os arquivos Gerber.</li>
+        <li>Encomendar ao fabricante (3 a 4 semanas). Se não der tempo: <b>protoboard</b>.</li>
+      </ol>
+      <div class="caixa aviso" style="margin:6px 0"><b class="t">⚠️ Prazo apertado</b>
+        O cronograma previa o pedido em 10/11. Se ainda não foi feito, a placa chega perto da Mostra (14/12).
+        Decisão do grupo: pedir já, ou assumir a protoboard como plano principal.</div>
+    </div>
+  </div>
+
+  <!-- FASE 9 -->
+  <div class="fase">
+    <div class="topo" style="background:#1f2430"><span class="n">9</span><h3>Mostra e artigo</h3><span class="quando">10/12 → 17/12</span></div>
+    <div class="corpo">
+      <ul>
+        <li><b>10/12, checkpoint</b>: bootloader + SO rodando na placa (já adiantado!).</li>
+        <li>Gravar tudo na <b>flash</b> (<code>python build.py gravar --flash</code>), para a placa ligar já com o jogo.</li>
+        <li>Ensaio: ligar, jogar, alterar o jogo ao vivo pela serial (o "uau" da apresentação).</li>
+        <li>Levar: placa, cabo USB, cabo HDMI, alto-falante, botões e o notebook com tudo instalado.</li>
+        <li><b>17/12</b>: artigo + repositório Git. O <code>docs/isa.md</code> e este guia já servem de base.</li>
+      </ul>
+    </div>
+  </div>
+
+<!-- ======================= 6. CALENDÁRIO ======================= -->
+  <div class="secao" style="margin-top:18px"><div class="num">6</div><div><h2>Calendário</h2>
+    <div class="resumo">A placa chegou antes do previsto (era 25/11), então estamos adiantados no hardware.</div></div></div>
+  <div class="tempo">
+    <div class="ev feito"><span class="data">20/11</span> ✅ Placa funcionando, CPU, montador e bootloader</div>
+    <div class="ev"><span class="data">21 → 24/11</span> Fase 3: sistema operacional (monitor + chamadas)</div>
+    <div class="ev"><span class="data">25 → 30/11</span> Fase 4: vídeo HDMI</div>
+    <div class="ev"><span class="data">01 → 03/12</span> Fases 5 e 6: som e botões</div>
+    <div class="ev"><span class="data">04 → 09/12</span> Fase 7: o Pong</div>
+    <div class="ev marco"><span class="data">10/12</span> 🚩 Checkpoint</div>
+    <div class="ev"><span class="data">11 → 13/12</span> Gravar na flash, ensaiar, plano B pronto</div>
+    <div class="ev marco"><span class="data">14/12</span> 🏁 Mostra Garagem</div>
+    <div class="ev marco"><span class="data">17/12</span> 📄 Artigo e repositório Git</div>
+  </div>
+</section>
+
+<!-- ======================= 7. PROBLEMAS ======================= -->
+<section class="pagina">
+  <div class="secao"><div class="num">7</div><div><h2>Quando algo dá errado</h2>
+    <div class="resumo">Os problemas que já apareceram e como resolver cada um.</div></div></div>
+
+  <table>
+    <tr><th style="width:38%">Sintoma</th><th>Causa</th><th style="width:34%">Solução</th></tr>
+    <tr><td>A serial não mostra nada, ou só zeros</td><td>A porta COM4 estava aberta durante a gravação; a ponte USB travou</td><td><b>Desconecte o cabo USB, espere 3 s e reconecte.</b> Daqui em diante: abra a serial só <b>depois</b> de gravar</td></tr>
+    <tr><td><code>unable to open ftdi device</code></td><td>Driver errado na interface de gravação</td><td>Zadig → interface com USB ID <code>0403 6010 00</code> → WinUSB</td></tr>
+    <tr><td><code>'yosys' não é reconhecido…</code></td><td>Terminal aberto antes da instalação</td><td>Feche e abra um terminal novo</td></tr>
+    <tr><td><code>python build.py sim</code> mostra <b>FALHA</b></td><td>Algo no Verilog ou no Assembly quebrou</td><td>Leia o <code>pc=</code> mostrado e procure esse endereço; use o GTKWave se precisar</td></tr>
+    <tr><td><code>carregar.py</code>: "não vi o bootloader"</td><td>A placa não reiniciou</td><td>Use <code>--reset</code> ou aperte <b>S1</b></td></tr>
+    <tr><td>O montador diz <code>linha N: …</code></td><td>Erro de digitação no <code>.asm</code></td><td>A mensagem mostra a linha e o motivo</td></tr>
+  </table>
+
+  <div class="caixa perigo"><b class="t">🛑 Nunca faça</b>
+    <ul style="margin:4px 0">
+      <li>Ligar um sinal de <b>saída</b> da FPGA no pino 70 (é por ele que a ponte USB manda dados para a placa).</li>
+      <li>Escolher a interface <code>0403 6010 01</code> no Zadig (é a da serial; ela pararia de funcionar).</li>
+      <li>Ligar botões ou fios em pinos sem conferir a tabela de pinos da Sipeed.</li>
+    </ul>
+  </div>
+
+  <div class="caixa dica"><b class="t">💡 Regra de ouro</b>
+    Primeiro <b>simula</b> (<code>build.py sim</code>), depois grava. Erro achado no simulador custa minutos; na placa, horas.
+  </div>
+</section>
+
+<!-- ======================= 8. GLOSSÁRIO ======================= -->
+<section class="pagina">
+  <div class="secao"><div class="num">8</div><div><h2>Glossário</h2>
+    <div class="resumo">Todas as palavras difíceis, em ordem alfabética.</div></div></div>
+  <div class="glossario">
+    <div><b>Acumulador (A)</b>: a "mão" da CPU; toda conta passa por ele.</div>
+    <div><b>Assembly</b>: linguagem com os comandos da CPU escritos como palavras (<code>LDA</code>, <code>ADD</code>).</div>
+    <div><b>Bit / byte</b>: bit = 0 ou 1; byte = 8 bits (de 0 a 255).</div>
+    <div><b>Bitstream (.fs)</b>: o arquivo que "programa" a FPGA.</div>
+    <div><b>Bootloader</b>: primeiro programa ao ligar; prepara tudo e chama o SO.</div>
+    <div><b>BSRAM</b>: blocos de memória dentro do chip; nossa ROM e RAM moram neles.</div>
+    <div><b>Chamada de sistema</b>: função do SO que outros programas usam.</div>
+    <div><b>CPU</b>: processador; executa os comandos.</div>
+    <div><b>Debounce</b>: filtro que ignora o "tremido" do botão.</div>
+    <div><b>Flag (Z, C)</b>: anotação da CPU. Z = "deu zero"; C = "passou de 255" ou "ficou negativo".</div>
+    <div><b>Flash</b>: memória que não apaga ao desligar.</div>
+    <div><b>FPGA</b>: chip que vira qualquer circuito digital que a gente descrever.</div>
+    <div><b>Hexadecimal (h, $)</b>: números em base 16: <code>3Fh</code> = <code>$3F</code> = 63.</div>
+    <div><b>HDMI</b>: cabo de vídeo digital da TV.</div>
+    <div><b>I2S</b>: protocolo de áudio digital de 3 fios.</div>
+    <div><b>ISA</b>: <i>Instruction Set Architecture</i>, a lista de comandos que a CPU entende.</div>
+    <div><b>LUT</b>: pecinha lógica da FPGA; o chip tem 20 mil, usamos cerca de 1 mil.</div>
+    <div><b>Montador</b>: traduz Assembly em números (<code>gasm.py</code>).</div>
+    <div><b>Opcode</b>: o número que representa um comando (<code>LDA #</code> = 10h).</div>
+    <div><b>Pilha (SP)</b>: memória onde a CPU guarda para onde voltar depois de um <code>CALL</code>.</div>
+    <div><b>PLL</b>: circuito que cria relógios de outras frequências.</div>
+    <div><b>Porta de E/S</b>: número que a CPU usa para falar com LEDs, serial, vídeo e som (<code>IN</code>/<code>OUT</code>).</div>
+    <div><b>RAM</b>: memória de trabalho; apaga ao desligar.</div>
+    <div><b>ROM</b>: memória fixa; o programa não muda o que está nela.</div>
+    <div><b>Serial / UART</b>: conversa de 1 bit por vez pelo USB; usamos 9600 bits/s.</div>
+    <div><b>Simulação</b>: rodar o circuito dentro do PC para testar.</div>
+    <div><b>SO</b>: sistema operacional; o "gerente" que fica sempre rodando.</div>
+    <div><b>SoC</b>: <i>System on Chip</i>, CPU + memória + periféricos juntos num chip.</div>
+    <div><b>SRAM (gravação)</b>: gravar a FPGA de forma temporária (some ao desligar).</div>
+    <div><b>Síntese</b>: transformar o Verilog em peças do chip.</div>
+    <div><b>Testbench</b>: circuito de teste que "cutuca" o nosso e confere as respostas.</div>
+    <div><b>TMDS</b>: a codificação dos bits usada pelo HDMI.</div>
+    <div><b>Verilog</b>: linguagem para descrever circuitos.</div>
+    <div><b>WinUSB</b>: driver genérico do Windows usado para gravar a placa.</div>
+  </div>
+</section>
+
+</body>
+</html>
