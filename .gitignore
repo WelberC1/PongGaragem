@@ -4,3 +4,4 @@ __pycache__/
 *.vvp
 *.vcd
 *.fs
+docs/CONTEXTO.md
