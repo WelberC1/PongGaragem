@@ -6,7 +6,7 @@ module tb_boot;
    reg clk = 0, rst = 1, rx = 1;
    wire tx; wire [5:0] led_n;
    gar8_soc #(.ROM_FILE("rom.hex"), .CE_DIV(2), .UART_DIV(DIV), .TICK_DIV(400)) dut
-     (.clk(clk), .rst(rst), .btn(1'b0), .uart_rx(rx), .uart_tx(tx), .led_n(led_n));
+     (.clk(clk), .rst(rst), .btn(5'b0), .uart_rx(rx), .uart_tx(tx), .led_n(led_n));
    always #1 clk = ~clk;
 
    reg [7:0] carga [0:4095];

@@ -4,7 +4,7 @@ module tb_cpu;
    reg clk = 0, rst = 1;
    wire tx; wire [5:0] led_n;
    gar8_soc #(.ROM_FILE("teste_cpu.hex"), .CE_DIV(2)) dut
-     (.clk(clk), .rst(rst), .btn(1'b0), .uart_rx(1'b1), .uart_tx(tx), .led_n(led_n));
+     (.clk(clk), .rst(rst), .btn(5'b0), .uart_rx(1'b1), .uart_tx(tx), .led_n(led_n));
    always #1 clk = ~clk;
 
    initial begin

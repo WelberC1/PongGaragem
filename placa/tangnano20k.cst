@@ -14,3 +14,37 @@ IO_LOC "led_n[2]" 17;
 IO_LOC "led_n[3]" 18;
 IO_LOC "led_n[4]" 19;
 IO_LOC "led_n[5]" 20;
+
+// botões de fliperama (protoboard): pino -> botão -> GND
+IO_LOC "j1_sobe" 73;
+IO_PORT "j1_sobe" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC "j1_desce" 74;
+IO_PORT "j1_desce" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC "j2_sobe" 72;
+IO_PORT "j2_sobe" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC "j2_desce" 71;
+IO_PORT "j2_desce" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+
+// HDMI (pinos do exemplo oficial da Sipeed, hdmi/src/hdmi.cst)
+IO_LOC "tmds_clk_p" 33;
+IO_LOC "tmds_clk_n" 34;
+IO_PORT "tmds_clk_p" IO_TYPE=LVDS25 PULL_MODE=NONE DRIVE=3.5;
+IO_LOC "tmds_d_p[0]" 35;
+IO_LOC "tmds_d_n[0]" 36;
+IO_PORT "tmds_d_p[0]" IO_TYPE=LVDS25 PULL_MODE=NONE DRIVE=3.5;
+IO_LOC "tmds_d_p[1]" 37;
+IO_LOC "tmds_d_n[1]" 38;
+IO_PORT "tmds_d_p[1]" IO_TYPE=LVDS25 PULL_MODE=NONE DRIVE=3.5;
+IO_LOC "tmds_d_p[2]" 39;
+IO_LOC "tmds_d_n[2]" 40;
+IO_PORT "tmds_d_p[2]" IO_TYPE=LVDS25 PULL_MODE=NONE DRIVE=3.5;
+
+// amplificador MAX98357A da placa (exemplo oficial da Sipeed, audio/src/audio.cst)
+IO_LOC "pa_en" 51;
+IO_PORT "pa_en" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_LOC "hp_din" 54;
+IO_PORT "hp_din" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_LOC "hp_ws" 55;
+IO_PORT "hp_ws" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_LOC "hp_bck" 56;
+IO_PORT "hp_bck" IO_TYPE=LVCMOS33 DRIVE=8;

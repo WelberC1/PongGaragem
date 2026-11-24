@@ -1,6 +1,7 @@
 """Constrói o Pong-Garagem.
 
     python build.py sim              monta o software e roda os testes no Icarus
+                                     (o teste de vídeo grava build/quadro.png)
     python build.py placa            gera build/pong_garagem.fs para a Tang Nano 20K
     python build.py gravar           grava na SRAM da placa (perde ao desligar)
     python build.py gravar --flash   grava na flash (fica gravado)
@@ -8,7 +9,9 @@
 import os
 import shutil
 import subprocess
+import struct
 import sys
+import zlib
 
 RAIZ = os.path.dirname(os.path.abspath(__file__))
 BUILD = os.path.join(RAIZ, 'build')
@@ -19,7 +22,8 @@ OSS = r'C:\oss-cad-suite'
 if not shutil.which('yosys') and os.path.isdir(OSS):
     os.environ['PATH'] = os.pathsep.join([os.path.join(OSS, 'bin'), os.path.join(OSS, 'lib'), os.environ['PATH']])
 
-RTL = [os.path.join(RAIZ, 'rtl', f) for f in ('gar8_cpu.v', 'gar8_soc.v')]
+RTL = [os.path.join(RAIZ, 'rtl', f) for f in ('gar8_cpu.v', 'gar8_soc.v', 'gar8_video.v', 'gar8_som.v', 'tmds_enc.v')]
+PLACA = [os.path.join(RAIZ, 'rtl', f) for f in ('hdmi_gowin.v', 'top_tangnano20k.v')]
 
 
 def run(*cmd):
@@ -53,20 +57,43 @@ def software():
     with open(os.path.join(BUILD, 'carga.vh'), 'w') as f:
         f.write(f'`define CARGA_LEN {len(carga)}\n`define CARGA_SUM 8\'h{sum(carga) & 0xFF:02x}\n')
 
+    video = monta('teste_video.asm', 0x8000)
+    hexfile('teste_video.hex', video)
+    with open(os.path.join(BUILD, 'teste_video.bin'), 'wb') as f:   # para o carregar.py
+        f.write(video)
+    hexfile('salto.hex', bytes([0x40, 0x00, 0x80]).ljust(0x800, b'\0'))   # ROM: JMP $8000
+
+
+def ppm_para_png(ppm, png):
+    """Converte o P3 que o tb_video grava num PNG, para abrir no Windows."""
+    with open(ppm) as f:
+        v = f.read().split()
+    w, h = int(v[1]), int(v[2])
+    pix = bytes(int(x) for x in v[4:4 + w * h * 3])
+    linhas = b''.join(b'\0' + pix[y * w * 3:(y + 1) * w * 3] for y in range(h))
+
+    def bloco(tipo, dados):
+        return struct.pack('>I', len(dados)) + tipo + dados + struct.pack('>I', zlib.crc32(tipo + dados))
+    with open(png, 'wb') as f:
+        f.write(b'\x89PNG\r\n\x1a\n' + bloco(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 2, 0, 0, 0))
+                + bloco(b'IDAT', zlib.compress(linhas)) + bloco(b'IEND', b''))
+
 
 def sim():
     software()
-    for tb in ('tb_cpu', 'tb_boot'):
+    for tb in ('tb_cpu', 'tb_boot', 'tb_tmds', 'tb_video'):
         run('iverilog', '-g2005', '-o', tb + '.vvp', os.path.join(RAIZ, 'tb', tb + '.v'), *RTL)
         saida = subprocess.run(['vvp', '-n', tb + '.vvp'], cwd=BUILD, capture_output=True, text=True).stdout
         print(saida)
         if 'OK:' not in saida:
             sys.exit(f'{tb} falhou')
+    ppm_para_png(os.path.join(BUILD, 'quadro.ppm'), os.path.join(BUILD, 'quadro.png'))
+    print('quadro do teste de vídeo: build/quadro.png')
 
 
 def placa():
     software()
-    run('yosys', '-q', '-p', 'read_verilog ' + ' '.join(RTL + [os.path.join(RAIZ, 'rtl', 'top_tangnano20k.v')])
+    run('yosys', '-q', '-p', 'read_verilog ' + ' '.join(RTL + PLACA)
         + '; synth_gowin -top top_tangnano20k -json pong_garagem.json')
     run('nextpnr-himbaechel', '-q', '--json', 'pong_garagem.json', '--write', 'pnr.json',
         '--device', 'GW2AR-LV18QN88C8/I7', '--vopt', 'family=GW2A-18C',

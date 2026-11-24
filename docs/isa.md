@@ -78,11 +78,36 @@ A15 = 0 seleciona a ROM, A15 = 1 a RAM.
 
 | Porta | IN | OUT |
 |-------|----|-----|
-| 00h | botões (bit 0 = S2 da placa) | – |
+| 00h | botões, 1 = apertado (lidos a cada 10 ms): bit 0 = S2 da placa, 1 = J1 sobe, 2 = J1 desce, 3 = J2 sobe, 4 = J2 desce | – |
 | 01h | serial: bit 0 = byte recebido, bit 1 = transmissor ocupado | – |
 | 02h | lê o byte recebido (limpa o bit 0 da porta 01h) | envia um byte |
 | 03h | contador de tempo, +1 a cada 10 ms | LEDs da placa (bits 0–5) |
-| 80h–8Ah | (E/S 1: vídeo e som — a definir) | |
+| 80h | – | bola X (casa 0–159) |
+| 81h | – | bola Y (casa 0–119) |
+| 82h | – | raquete 1 Y (topo; 0–104) |
+| 83h | – | raquete 2 Y (topo; 0–104) |
+| 84h | – | placar jogador 1 (0–99) |
+| 85h | – | placar jogador 2 (0–99) |
+| 86h | – | cor da frente, RRRGGGBB (início FFh = branco) |
+| 87h | bit 0 = quadro novo (começou o retraço vertical, 60 vezes/s); ler limpa | – |
+| 88h | – | duração do som, em unidades de 10 ms (início 10 = 100 ms) |
+| 8Ah | – | toca a nota n: frequência = 23 437 / n Hz (n = 53 ≈ 440 Hz); 0 cala |
+
+### Vídeo
+
+640×480 a 60 Hz pelo HDMI. A tela é uma grade de 160×120 casas de 4×4 pixels.
+A CPU só escreve as posições; o circuito desenha:
+
+| Objeto | Tamanho (casas) | Posição |
+|--------|-----------------|---------|
+| bola | 2×2 | canto de cima à esquerda em (80h, 81h) |
+| raquete 1 | 2×16 | colunas 4–5, topo em 82h |
+| raquete 2 | 2×16 | colunas 154–155, topo em 83h |
+| rede | 1 coluna tracejada | coluna 79 |
+| placares | 2 dígitos de 6×10 | colunas 58 e 88, linha 4 |
+
+Escreva nas portas logo depois de ver o bit 0 da 87h ligado: assim a imagem
+não muda no meio da tela.
 
 ## Ciclos
 

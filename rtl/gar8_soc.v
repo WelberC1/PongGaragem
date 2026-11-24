@@ -1,5 +1,6 @@
 /**
- * Pong-Garagem: GAR-8 + ROM 2 KB + RAM 16 KB + E/S 0 (botões, serial, LEDs, tempo).
+ * Pong-Garagem: GAR-8 + ROM 2 KB + RAM 16 KB + E/S 0 (botões, serial, LEDs, tempo)
+ * + E/S 1 (vídeo e som).
  * Mapa de memória e portas: docs/isa.md.
  * Padrões para a Tang Nano 20K (clk = 27 MHz); o testbench diminui os divisores.
  */
@@ -11,10 +12,16 @@ module gar8_soc
    (
     input        clk,
     input        rst,
-    input        btn,      // S2
+    input [4:0]  btn,      // 1 = apertado: S2, J1 sobe, J1 desce, J2 sobe, J2 desce
     input        uart_rx,
     output       uart_tx,
-    output [5:0] led_n     // LEDs da placa acendem em nível baixo
+    output [5:0] led_n,    // LEDs da placa acendem em nível baixo
+    // vídeo (domínio clk_pix)
+    input        clk_pix,
+    output [7:0] vid_r, vid_g, vid_b,
+    output       vid_hs, vid_vs, vid_de,
+    // som (I2S)
+    output       i2s_bck, i2s_ws, i2s_din
     );
 
    // ---------- clock enable da CPU ----------
@@ -84,9 +91,57 @@ module gar8_soc
    // ---------- contador de tempo (100 Hz) ----------
    reg [19:0] tdiv = 0;
    reg [7:0]  tick = 0;
+   wire       tick_p = (tdiv == TICK_DIV - 1);
    always @(posedge clk)
-     if (tdiv == TICK_DIV - 1) begin tdiv <= 0; tick <= tick + 1; end
+     if (tick_p) begin tdiv <= 0; tick <= tick + 1; end
      else tdiv <= tdiv + 1;
+
+   // ---------- botões: amostrados a cada 10 ms (tira o "tremido") ----------
+   reg [4:0] btn_a = 0, btn_q = 0;
+   always @(posedge clk) begin
+      btn_a <= btn;
+      if (tick_p) btn_q <= btn_a;
+   end
+
+   // ---------- E/S 1: registradores de vídeo e som ----------
+   reg [7:0] bola_x = 79, bola_y = 59, raq1 = 52, raq2 = 52;
+   reg [7:0] placar1 = 0, placar2 = 0, cor = 8'hFF, som_dur = 10;
+   always @(posedge clk)
+     if (io_wr) case (io_port)
+       8'h80: bola_x  <= io_wdata;
+       8'h81: bola_y  <= io_wdata;
+       8'h82: raq1    <= io_wdata;
+       8'h83: raq2    <= io_wdata;
+       8'h84: placar1 <= io_wdata;
+       8'h85: placar2 <= io_wdata;
+       8'h86: cor     <= io_wdata;
+       8'h88: som_dur <= io_wdata;
+       default: ;
+     endcase
+
+   // ---------- vídeo ----------
+   wire quadro_pix;
+   gar8_video video(.clk_pix(clk_pix),
+                    .bola_x(bola_x), .bola_y(bola_y), .raq1(raq1), .raq2(raq2),
+                    .placar1(placar1), .placar2(placar2), .cor(cor),
+                    .r(vid_r), .g(vid_g), .b(vid_b), .hs(vid_hs), .vs(vid_vs), .de(vid_de),
+                    .quadro(quadro_pix));
+
+   // aviso de "quadro novo" atravessa de clk_pix para clk por um bit que troca
+   reg       q_troca = 0;
+   reg [2:0] q_sinc = 0;
+   reg       quadro_novo = 0;
+   always @(posedge clk_pix) if (quadro_pix) q_troca <= ~q_troca;
+   always @(posedge clk) begin
+      q_sinc <= {q_sinc[1:0], q_troca};
+      if (q_sinc[2] != q_sinc[1]) quadro_novo <= 1;
+      else if (io_rd && io_port == 8'h87) quadro_novo <= 0;
+   end
+
+   // ---------- som ----------
+   gar8_som som(.clk(clk), .rst(rst), .tick(tick_p),
+                .toca(io_wr && io_port == 8'h8A), .nota(io_wdata), .duracao(som_dur),
+                .bck(i2s_bck), .ws(i2s_ws), .din(i2s_din));
 
    // ---------- LEDs ----------
    reg [5:0] leds = 0;
@@ -97,10 +152,11 @@ module gar8_soc
 
    // ---------- leitura de E/S 0 ----------
    always @* case (io_port)
-     8'h00:   io_rdata = {7'b0, btn};
+     8'h00:   io_rdata = {3'b0, btn_q};
      8'h01:   io_rdata = {6'b0, tx_busy, rx_ready};
      8'h02:   io_rdata = rx_data;
      8'h03:   io_rdata = tick;
+     8'h87:   io_rdata = {7'b0, quadro_novo};
      default: io_rdata = 8'h00;
    endcase
 endmodule
