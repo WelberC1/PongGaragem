@@ -81,6 +81,8 @@ def ppm_para_png(ppm, png):
 
 def sim():
     software()
+    import emulador
+    emulador.autoteste()
     for tb in ('tb_cpu', 'tb_boot', 'tb_tmds', 'tb_video'):
         run('iverilog', '-g2005', '-o', tb + '.vvp', os.path.join(RAIZ, 'tb', tb + '.v'), *RTL)
         saida = subprocess.run(['vvp', '-n', tb + '.vvp'], cwd=BUILD, capture_output=True, text=True).stdout

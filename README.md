@@ -22,6 +22,7 @@ python build.py sim               # monta e roda os testes (~2 min; todos termin
 python build.py placa             # gera build/pong_garagem.fs
 python build.py gravar            # grava na SRAM (some ao desligar)
 python build.py gravar --flash    # grava na flash
+python sw/emulador.py sw/teste_video.asm   # roda no PC, sem placa: janela com a tela, W/S e setas = botões
 python sw/gasm.py prog.asm prog.bin
 python sw/carregar.py COM4 prog.bin --reset   # grava, espera o boot e envia prog.bin
 python sw/carregar.py COM4                    # só mostra a serial
